@@ -1,0 +1,14 @@
+{{ template "header" . }}
+<h1>ユーザ情報変更</h1>
+{{ if .Error }}
+<p><font color="#FF0000">{{ .Error }}</font></p>
+{{ end }}
+<form action="/change_user" method="POST">
+    <label>新しいユーザ名: </label><input type="text" name="username" value="{{ .Username }}"required><br>
+    <label>新しいパスワード: </label><input type="password" name="password" required><br>
+    <label>新しいパスワード確認: </label><input type="password" name="password_check" required><br>
+    <label>現在のパスワード: </label><input type="password" name="password_now" required><br>
+    <input type="submit" value="変更">
+</form>
+<p><a href="/list">戻る</a></p>
+{{ template "footer" }}

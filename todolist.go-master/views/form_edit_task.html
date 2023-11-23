@@ -1,0 +1,65 @@
+{{ template "header" . }}
+<h1>Task {{ .Task.ID }}: edit</h1>
+{{ if .Error }}
+<p><font color="#FF0000">{{ .Error }}</font></p>
+{{ end }}
+<form action="/task/edit/{{ .Task.ID }}" method="POST" onsubmit="return confirm_update({{ .Task.ID }})">
+    <label>Title</label><input type="text" name="title" value="{{ .Task.Title }}" required>
+    <br>
+    <input type="radio" name="is_done" value="t" {{ if .Task.IsDone }}checked{{ end }}><label>完了</label>
+    <input type="radio" name="is_done" value="f" {{ if not .Task.IsDone }}checked{{ end }}><label>未完了</label>
+    </br>
+    <label>期日(任意入力)</label>
+    <input type="date" name="due_to" {{ if ne .Task.DueTo_Str "0001-01-01" }} value="{{ .Task.DueTo_Str}}" {{ end }}>
+    </br>
+    <label>優先度</label>
+    <select name="priority" id="priority">
+        <option value="普通" {{ if eq .Task.Priority "普通" }} selected {{ end }}>普通</option>
+        <option value="強" {{ if eq .Task.Priority "強" }} selected {{ end }}>強</option>
+        <option value="弱" {{ if eq .Task.Priority "弱" }} selected {{ end }}>弱</option>
+    </select>
+    <br>
+    <label>タグ</label>
+    <select name="tag" id="tag">
+        <option value="未設定" {{ if eq .Tag "未設定" }} selected {{ end }}>未設定</option>
+        {{ range $tags := .Tags }}
+        <option value="{{ $tags.Tag_name }}" {{ if eq $.Tag $tags.Tag_name }} selected {{ end }}>{{ $tags.Tag_name }}</option>
+        {{ end }}
+    </select>
+    <label>新規タグ</label>
+    <input type="text" name="new_tag">
+    </br>
+    {{if eq .MyUserID .Task.CreateUser }}
+    <label>共有</label>
+    <br>
+    <select name="share" id="share" multiple>
+        <option value="未設定" selected>未設定</option>
+        {{ range $users := .Users }}
+        {{if ne $.UserName $users.Name}}
+        <option value="{{ $users.Name }}" {{ range $share_user := $.ShareUser }}{{if eq $share_user $users.Name}}selected{{end}}{{end}}>{{ $users.Name }}</option>
+        {{ end }}
+        {{ end }}
+    </select>
+    <br>
+    複数人選択の場合は
+    <br>
+    macならcmd+クリック
+    <br> 
+    windowsならctrl+クリック
+    <br>
+    {{ end }}
+    <label>説明文(任意入力)</label>
+    </br>
+    <textarea name="description">{{ .Task.Explanation }}</textarea>
+    <button type="submit">登録</button>
+    <a href="/task/{{ .Task.ID }}"><button type="button">戻る</button></a>
+</form>
+<!--<script type="text/javascript">
+    const confirm_update = (id) => {
+        if(window.confirm(`Task ${id} を更新します．よろしいですか？`)) {
+            return ture;
+        }
+        return false;
+    }
+</script>--->
+{{ template "footer" }}

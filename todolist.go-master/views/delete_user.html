@@ -1,0 +1,11 @@
+{{ template "header" . }}
+<h1>ユーザ削除</h1>
+{{ if .Error }}
+<p><font color="#FF0000">{{ .Error }}</font></p>
+{{ end }}
+<form action="/delete_user" method="POST" onsubmit="return confirm_deleteuser({{ .Username }})">
+    <label>パスワード: </label><input type="password" name="password" required></br>
+    <input type="submit" value="削除">
+</form>
+<p><a href="/list">戻る</a></p>
+{{ template "footer" }}

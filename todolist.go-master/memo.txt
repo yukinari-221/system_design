@@ -1,0 +1,10 @@
+sudo lsof -i:3306
+sudo kill nnn
+docker-compose up -d
+docker-compose exec app go get github.com/gin-contrib/sessions
+docker-compose down --rmi all --volumes --remove-orphans 
+docker-compose exec app go run main.go 
+
+    {{ range $tags := .Tags }}
+    <option value="{{ $tags.Tag }}" {{ if eq .Tag $tags.Tag }} selected {{ end }}>{{ $tags.Tag }}</option>
+    {{ end }}

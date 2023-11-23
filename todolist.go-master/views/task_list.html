@@ -1,0 +1,211 @@
+{{ template "header" . }}
+<h1>List of tasks</h1>
+<form action="/list" method="GET">
+    <input type="text" name="kw" value="{{ .Kw }}">
+    絞り込み
+    <select name="done_check" id="done_check" value="{{ .Done_check }}">
+        <option value="all" {{ if eq .Done_check "all" }} selected {{ end }}>all</option>
+        <option value="実行済" {{ if eq .Done_check  "実行済" }} selected {{ end }}>実行済</option>
+        <option value="未実行" {{ if eq .Done_check  "未実行" }} selected {{ end }}>未実行</option>
+    </select>
+    タグ
+    <select name="tag_se" id="tag_se">
+        <option value="指定しない" selected>指定しない</option>
+        {{ range $tags := .Tags }}
+        <option value="{{ $tags.Tag_name }}" {{if not $.Tag_se}}{{ else if eq $.Tag_se $tags.Tag_name }} selected {{ end }}>{{ $tags.Tag_name }}</option>
+        {{ end }}
+    </select>
+
+    <input type="submit" value="検索">
+</form>
+<p><a href="/task/new">新規登録</a></p>
+{{ if not .Tasks }}
+<p>登録データがありません．</p>
+{{ else }}
+<div class="container">
+    <div class="row">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>タイトル</th>
+                        <th>登録日</th>
+                        <th>期日</th>
+                        <th>優先度</th>
+                        <th>状態</th>
+                    </tr>
+                </thead>
+                <tbody id="myTable">
+                {{ range $task := .Tasks }}
+                    <tr>
+                        <td><a href="/task/{{ $task.ID }}">{{ $task.ID }}</a></td>
+                        <td><font {{ if eq $task.Priority "強" }} color="#FF0000" {{ end }} {{ if eq $task.Priority "弱" }} style="opacity:0.5" {{ end }}>{{ $task.Title }}</font></td>
+                        <td>{{ $task.CreatedAt_Str }}</td>
+                        <td><font {{ if eq $task.DueTo_Str "未設定" }} style="opacity:0.4" {{ else if gt $task.RestDay 0}} {{ else if eq $task.RestDay 0}} color="#ff7f50" {{ else }} color="#ff1493" {{ end }}>{{ if eq $task.DueTo_Str "未設定" }} {{ $task.DueTo_Str }} {{ else if gt $task.RestDay 0}} 残り{{ $task.RestDay }}日 {{ else if eq $task.RestDay 0}} 期日当日　{{ else }} 期限切れ　{{ end }}</td>
+                        <td><font {{ if eq $task.Priority "強" }} color="#FF0000" {{ end }} {{ if eq $task.Priority "弱" }}style="opacity:0.5"{{ end }}>{{ $task.Priority }}</font></td>
+                        <td>{{ if $task.IsDone }}済{{ end }}</td>
+                    </tr>
+                {{ end }}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-12 text-center">
+            <ul class="pagination pagination-lg pager" id="myPager"></ul>
+        </div>
+    </div>
+</div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">-->
+    <script>
+        $.fn.pageMe = function (opts) {
+            var $this = this,
+                defaults = {
+                    perPage: 10,
+                    showPrevNext: false,
+                    hidePageNumbers: false
+                },
+                settings = $.extend(defaults, opts);
+    
+            var listElement = $this;
+            var perPage = settings.perPage;
+            var children = listElement.children();
+            var pager = $('.pager');
+    
+            if (typeof settings.childSelector != "undefined") {
+                children = listElement.find(settings.childSelector);
+            }
+    
+            if (typeof settings.pagerSelector != "undefined") {
+                pager = $(settings.pagerSelector);
+            }
+    
+            var numItems = children.size();
+            var numPages = Math.ceil(numItems / perPage);
+    
+            pager.data("curr", 0);
+    
+            if (settings.showPrevNext) {
+                $('<li><a href="#" class="prev_link">«</a></li>').appendTo(pager);
+            }
+    
+            var curr = 0;
+            // Added class and id in li start
+            while (numPages > curr && (settings.hidePageNumbers == false)) {
+                $('<li id="pg' + (curr + 1) + '" class="pg"><a href="#" class="page_link">' + (curr + 1) + '</a></li>').appendTo(pager);
+                curr++;
+            }
+            // Added class and id in li end
+    
+            if (settings.showPrevNext) {
+                $('<li><a href="#" class="next_link">»</a></li>').appendTo(pager);
+            }
+    
+            //pager.find('.page_link:first').addClass('active');
+            pager.find('.prev_link').hide();
+            if (numPages <= 1) {
+                pager.find('.next_link').hide();
+            }
+            pager.children().eq(1).addClass("active");
+    
+            children.hide();
+            children.slice(0, perPage).show();
+            if (numPages > 3) {
+                $('.pg').hide();
+                $('#pg1,#pg2,#pg3').show();
+                $("#pg3").after($("<li class='ell'>").html("<span>...</span>"));
+            }
+    
+            pager.find('li .page_link').click(function () {
+                var clickedPage = $(this).html().valueOf() - 1;
+                goTo(clickedPage, perPage);
+                return false;
+            });
+            pager.find('li .prev_link').click(function () {
+                previous();
+                return false;
+            });
+            pager.find('li .next_link').click(function () {
+                next();
+                return false;
+            });
+    
+            function previous() {
+                var goToPage = parseInt(pager.data("curr")) - 1;
+                goTo(goToPage);
+            }
+    
+            function next() {
+                goToPage = parseInt(pager.data("curr")) + 1;
+                goTo(goToPage);
+            }
+    
+            function goTo(page) {
+                var startAt = page * perPage,
+                    endOn = startAt + perPage;
+    
+                // Added few lines from here start
+    
+                $('.pg').hide();
+                $(".ell").remove();
+                var prevpg = $("#pg" + page).show();
+                var currpg = $("#pg" + (page + 1)).show();
+                var nextpg = $("#pg" + (page + 2)).show();
+                if (prevpg.length == 0) nextpg = $("#pg" + (page + 3)).show();
+                if (prevpg.length == 1 && nextpg.length == 0) {
+                    prevpg = $("#pg" + (page - 1)).show();
+                }
+                $("#pg1").show()
+                if (curr > 3) {
+                    if (page > 1) prevpg.before($("<li class='ell'>").html("<span>...</span>"));
+                    if (page < curr - 2) nextpg.after($("<li class='ell'>").html("<span>...</span>"));
+                }
+    
+                if (page <= numPages - 3) {
+                    $("#pg" + numPages.toString()).show();
+                }
+                currpg.addClass("active").siblings().removeClass("active");
+                // Added few lines till here end
+    
+    
+                children.css('display', 'none').slice(startAt, endOn).show();
+    
+                if (page >= 1) {
+                    pager.find('.prev_link').show();
+                } else {
+                    pager.find('.prev_link').hide();
+                }
+
+                if (page < (numPages - 1)) {
+                    pager.find('.next_link').show();
+                } else {
+                    pager.find('.next_link').hide();
+                }
+
+                pager.data("curr", page);
+                /*pager.children().removeClass("active");
+                pager.children().eq(page + 1).addClass("active");*/
+
+            }
+        };
+
+        $(document).ready(function () {
+
+            $('#myTable').pageMe({
+            pagerSelector: '#myPager',
+            showPrevNext: true,
+            hidePageNumbers: false,
+            perPage: 5
+            });
+
+        });
+    </script>
+       
+{{ end }}
+<form action="/list" method="POST">
+    <input type="submit" value="ログアウト">
+</form>
+<p><a href="/change_user">ユーザ情報変更</a></p>
+<p><a href="/delete_user">ユーザ削除</a></p>
+{{ template "footer" }}

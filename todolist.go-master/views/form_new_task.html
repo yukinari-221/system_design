@@ -1,0 +1,51 @@
+{{ template "header" . }}
+<h1>タスクの新規登録</h1>
+{{ if .Error }}
+<p><font color="#FF0000">{{ .Error }}</font></p>
+{{ end }}
+<form action="/task/new" method="POST">
+    <label>Title</label><input type="text" name="title" value="{{ .TaskTitle}}" required>
+    <br>
+    <label>期日(任意入力)</label>
+    <input type="date" name="due_to" value="{{ .DueTo }}">
+    <br>
+    <label>優先度</label>
+    <select name="priority" id="priority">
+        <option value="普通" {{ if eq .Priority "普通" }} selected {{ end }}>普通</option>
+        <option value="強" {{ if eq .Priority "強" }} selected {{ end }}>強</option>
+        <option value="弱" {{ if eq .Priority "弱" }} selected {{ end }}>弱</option>
+    </select>
+    <br>
+    <label>タグ</label>
+    <select name="tag" id="tag">
+        <option value="未設定" selected>未設定</option>
+        {{ range $tags := .Tags }}
+        <option value="{{ $tags.Tag_name }}">{{ $tags.Tag_name }}</option>
+        {{ end }}
+    </select>
+    <label>新規タグ</label>
+    <input type="text" name="new_tag">
+    <br>
+    <label>共有</label>
+    <br>
+    <select name="share" id="share" multiple>
+        <option value="未設定" selected>未設定</option>
+        {{ range $users := .Users }}
+        {{if ne $.UserName $users.Name}}
+        <option value="{{ $users.Name }}" {{ range $share_user := $.ShareUser }}{{if eq $share_user $users.Name}}selected{{end}}{{end}}>{{ $users.Name }}</option>
+        {{ end }}
+        {{ end }}
+    </select>
+    <br>
+    複数人選択の場合は
+    <br>
+    macならcmd+クリック
+    <br> 
+    windowsならctrl+クリック
+    <br>
+    <label>説明文(任意入力)</label>
+    <textarea name="description">{{ .Explain}}</textarea>
+    <input type="submit" value="登録">
+    <a href="/list"><button type="button">戻る</button></a>
+</form>
+{{ template "footer" }}

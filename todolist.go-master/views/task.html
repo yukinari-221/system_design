@@ -1,0 +1,34 @@
+{{ template "header" . }}
+<h1>Task {{ .Task.ID }}</h1>
+<dl>
+    <dt>Title</dt>
+    <dd>{{ .Task.Title }}</dd>
+    <dt>Created at</dt>
+    <dd>{{ .Task.CreatedAt }}</dd>
+    <dt>Status</dt>
+    <dd><input type="checkbox" {{ if .IsDone }}checked {{ end }}disabled/>済</dd>
+    <dt>期日</dt>
+    <dd>{{ .Task.DueTo_Str }}</dd>
+    <dt>優先度</dt>
+    <dd>{{ .Task.Priority }}</dd>
+    <dt>タグ</dt>
+    <dd>{{ .Task.Tag }}</dd>
+    <dt>作成者</dt>
+    <dd>{{if eq .MyUserID .Task.CreateUser}}自分{{else}}{{ .CreateUser }}{{end}}</dd>
+    <dt>説明文</dt>
+    <dd>{{ .Task.Explanation }}</dd>
+</dl>
+</dl>
+<a href="/list"><button type="button">リストへ戻る</button></a>
+{{if eq .MyUserID .Task.CreateUser }}
+<a href="/task/edit/{{ .Task.ID }}"><button type="button">編集</button></a>
+{{end}}
+<button type="button" onclick="confirm_delete({{ .Task.ID }})">{{if eq .MyUserID .Task.CreateUser }}削除{{else}}共有解除{{end}}</button>
+<!--<script type="text/javascript">
+const confirm_delete = (id) => {
+    if(window.confirm(`Task ${id} を削除します．よろしいですか？`)) {
+        location.href = `/task/delete/${id}`;
+    }
+}
+</script>--->
+{{ template "footer" }}
